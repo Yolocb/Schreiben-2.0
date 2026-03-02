@@ -46,6 +46,8 @@ final class EditorViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.isLoading)
         XCTAssertFalse(viewModel.showError)
         XCTAssertNil(viewModel.errorMessage)
+        XCTAssertEqual(viewModel.fontSize, 24) // Default
+        XCTAssertTrue(viewModel.showLineGuides) // Default
     }
 
     // MARK: - Service Injection Tests
@@ -89,65 +91,56 @@ final class EditorViewModelTests: XCTestCase {
         XCTAssertNotNil(viewModelWithBadID.errorMessage)
     }
 
-    // MARK: - Document Loading Tests
+    // MARK: - Text Content Tests
 
-    func testLoadDocumentWithoutService() {
+    func testTextContentBindingLoadsDocumentText() {
+        // Arrange
+        var doc = mockService.document(withID: testDocumentID)!
+        doc.textContent = "Hallo Welt"
+        mockService.updateDocument(doc)
+
+        let expectation = expectation(description: "Text should load")
+
         // Act
         viewModel.setDocumentService(mockService)
 
-        // Warte kurz
-        let expectation = expectation(description: "Loading should complete")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             expectation.fulfill()
         }
 
         // Assert
         wait(for: [expectation], timeout: 1.0)
-        XCTAssertNotNil(viewModel.document)
+        XCTAssertEqual(viewModel.textContent, "Hallo Welt")
     }
 
-    // MARK: - Document Updates Tests
-
-    func testDocumentUpdatesWhenServiceChanges() {
+    func testTextContentChangeMarksUnsaved() {
         // Arrange
-        let expectation = expectation(description: "Document should update")
+        let expectation = expectation(description: "Should mark unsaved")
         viewModel.setDocumentService(mockService)
 
-        // Warte auf initiales Laden
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            // Act: Aktualisiere Dokument über Service
-            if var doc = self.viewModel.document {
-                doc.title = "Updated Title"
-                self.mockService.updateDocument(doc)
-
-                // Warte auf Update
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    expectation.fulfill()
-                }
-            } else {
-                XCTFail("Document should be loaded")
-                expectation.fulfill()
-            }
+            // Act
+            self.viewModel.textContent = "Neuer Text"
+            expectation.fulfill()
         }
 
         // Assert
         wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(viewModel.document?.title, "Updated Title")
+        XCTAssertTrue(viewModel.hasUnsavedChanges)
     }
 
-    func testDocumentReloadsAfterServiceDocumentChange() {
+    // MARK: - Save Tests
+
+    func testSaveDocumentUpdatesContent() {
         // Arrange
-        let expectation = expectation(description: "Document should reload")
+        let expectation = expectation(description: "Document should save")
         viewModel.setDocumentService(mockService)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            // Act: Ändere Dokument direkt im Service
-            let updatedDoc = Document(
-                id: self.testDocumentID,
-                title: "Changed via Service",
-                textContent: "New content"
-            )
-            self.mockService.updateDocument(updatedDoc)
+            self.viewModel.textContent = "Gespeicherter Text"
+
+            // Act
+            self.viewModel.saveDocument()
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 expectation.fulfill()
@@ -156,8 +149,193 @@ final class EditorViewModelTests: XCTestCase {
 
         // Assert
         wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(viewModel.document?.title, "Changed via Service")
-        XCTAssertEqual(viewModel.document?.textContent, "New content")
+        let savedDoc = mockService.document(withID: testDocumentID)
+        XCTAssertEqual(savedDoc?.textContent, "Gespeicherter Text")
+        XCTAssertFalse(viewModel.hasUnsavedChanges)
+    }
+
+    func testSaveOnDisappearSavesIfNeeded() {
+        // Arrange
+        let expectation = expectation(description: "Should save on disappear")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            self.viewModel.textContent = "Wird beim Verlassen gespeichert"
+
+            // Act
+            self.viewModel.saveOnDisappear()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                expectation.fulfill()
+            }
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        let savedDoc = mockService.document(withID: testDocumentID)
+        XCTAssertEqual(savedDoc?.textContent, "Wird beim Verlassen gespeichert")
+    }
+
+    // MARK: - Font Size Tests
+
+    func testIncreaseFontSize() {
+        // Arrange
+        viewModel.fontSize = 24
+
+        // Act
+        viewModel.increaseFontSize()
+
+        // Assert
+        XCTAssertEqual(viewModel.fontSize, 26)
+    }
+
+    func testDecreaseFontSize() {
+        // Arrange
+        viewModel.fontSize = 24
+
+        // Act
+        viewModel.decreaseFontSize()
+
+        // Assert
+        XCTAssertEqual(viewModel.fontSize, 22)
+    }
+
+    func testFontSizeMaxLimit() {
+        // Arrange
+        viewModel.fontSize = 48
+
+        // Act
+        viewModel.increaseFontSize()
+
+        // Assert
+        XCTAssertEqual(viewModel.fontSize, 48) // Bleibt bei 48
+    }
+
+    func testFontSizeMinLimit() {
+        // Arrange
+        viewModel.fontSize = 16
+
+        // Act
+        viewModel.decreaseFontSize()
+
+        // Assert
+        XCTAssertEqual(viewModel.fontSize, 16) // Bleibt bei 16
+    }
+
+    // MARK: - Undo/Redo Tests
+
+    func testUndoRestoresPreviousText() {
+        // Arrange
+        let expectation = expectation(description: "Undo should work")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            self.viewModel.textContent = "Erster Text"
+            self.viewModel.textContent = "Zweiter Text"
+
+            // Act
+            self.viewModel.undo()
+            expectation.fulfill()
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.textContent, "Erster Text")
+        XCTAssertTrue(viewModel.canRedo)
+    }
+
+    func testRedoRestoresUndoneText() {
+        // Arrange
+        let expectation = expectation(description: "Redo should work")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            self.viewModel.textContent = "Erster Text"
+            self.viewModel.textContent = "Zweiter Text"
+            self.viewModel.undo()
+
+            // Act
+            self.viewModel.redo()
+            expectation.fulfill()
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.textContent, "Zweiter Text")
+    }
+
+    func testCanUndoIsFalseInitially() {
+        // Assert
+        XCTAssertFalse(viewModel.canUndo)
+    }
+
+    func testCanRedoIsFalseInitially() {
+        // Assert
+        XCTAssertFalse(viewModel.canRedo)
+    }
+
+    // MARK: - Statistics Tests
+
+    func testWordCountCalculation() {
+        // Arrange
+        viewModel.textContent = "Eins Zwei Drei Vier Fünf"
+
+        // Assert
+        XCTAssertEqual(viewModel.wordCount, 5)
+    }
+
+    func testWordCountWithEmptyText() {
+        // Arrange
+        viewModel.textContent = ""
+
+        // Assert
+        XCTAssertEqual(viewModel.wordCount, 0)
+    }
+
+    func testCharacterCountCalculation() {
+        // Arrange
+        viewModel.textContent = "Hallo"
+
+        // Assert
+        XCTAssertEqual(viewModel.characterCount, 5)
+    }
+
+    // MARK: - Title Update Tests
+
+    func testUpdateTitleChangesDocumentTitle() {
+        // Arrange
+        let expectation = expectation(description: "Title should update")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            // Act
+            self.viewModel.updateTitle("Neuer Titel")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                expectation.fulfill()
+            }
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.document?.title, "Neuer Titel")
+    }
+
+    func testUpdateTitleWithEmptyStringShowsError() {
+        // Arrange
+        let expectation = expectation(description: "Error should show")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            // Act
+            self.viewModel.updateTitle("   ")
+            expectation.fulfill()
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertTrue(viewModel.showError)
+        XCTAssertNotEqual(viewModel.document?.title, "   ")
     }
 
     // MARK: - Error Handling Tests
@@ -166,7 +344,7 @@ final class EditorViewModelTests: XCTestCase {
         // Arrange
         let viewModelWithoutService = EditorViewModel(documentID: UUID())
 
-        // Act - versuche ohne Service zu laden (intern aufgerufen)
+        // Act - versuche ohne Service zu laden
         // Dies sollte einen Fehler auslösen wenn setDocumentService nie aufgerufen wird
 
         // Assert

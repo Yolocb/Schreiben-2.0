@@ -43,10 +43,14 @@ Schreiben20/
 - Core Data Persistenz
 - 10 neue Unit-Tests für Verwaltungsfunktionen
 
-### 📅 Phase 3: Texteditor & Schreiboberfläche
-- Editor mit großer Schrift
-- Zeilenlinien und Haus-Symbol
-- Anpassbare Schriftgröße
+### ✅ Phase 3: Texteditor & Schreiboberfläche (Abgeschlossen)
+- Vollwertiger Texteditor mit großer Schrift (16-48pt)
+- Zeilenlinien-Hintergrund (ein/aus schaltbar)
+- Undo/Redo-Funktionalität
+- Wort- und Zeichenzähler
+- Auto-Save alle 30 Sekunden + beim Verlassen
+- Titel direkt im Editor bearbeitbar
+- 18 neue Unit-Tests für Editor-Funktionen
 
 ### 📅 Phase 4: Lautierende Tastatur & TTS
 - AVSpeechSynthesizer-Integration
@@ -113,7 +117,7 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 3. iPad-Simulator auswählen
 4. `cmd + R` zum Starten
 
-## 🎯 Aktuelle Features (Phase 2)
+## 🎯 Aktuelle Features (Phase 3)
 
 - ✅ App startet mit SwiftUI-Lifecycle
 - ✅ Navigation zwischen Dokumentliste, Editor und Einstellungen
@@ -122,6 +126,11 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 - ✅ Core Data Persistenz mit Migration
 - ✅ Swipe-to-Delete mit Bestätigungsdialog
 - ✅ Umbenennen per Doppeltipp
+- ✅ Vollwertiger Texteditor mit anpassbarer Schriftgröße
+- ✅ Zeilenlinien-Hintergrund für bessere Orientierung
+- ✅ Undo/Redo-Funktionalität
+- ✅ Wort- und Zeichenzähler
+- ✅ Auto-Save (30s Intervall + beim Verlassen)
 - ✅ Error-Handling und Loading-States
 - ✅ Unit-Tests für Modelle und ViewModels
 - ✅ UI-Tests für App-Launch und Navigation
@@ -161,4 +170,4 @@ Dieses Projekt ist ein Lern- und Demonstrationsprojekt.
 
 ---
 
-**Status**: Phase 2 abgeschlossen ✅ | Nächste Phase: Texteditor & Schreiboberfläche
+**Status**: Phase 3 abgeschlossen ✅ | Nächste Phase: Lautierende Tastatur & TTS

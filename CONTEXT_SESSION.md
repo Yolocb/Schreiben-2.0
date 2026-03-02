@@ -1,126 +1,176 @@
 # Session Context - Schreiben 2.0
 
 **Datum:** 2026-03-02
-**Status:** Phase 2 abgeschlossen
-**Nächster Schritt:** Phase 3 - Texteditor & Schreiboberfläche
+**Status:** Phase 3 abgeschlossen
+**Nächster Schritt:** Phase 4 - Lautierende Tastatur & TTS
 
 ---
 
 ## Was wurde heute erreicht?
 
-### Phase 2: Dokumentenverwaltung (Löschen & Umbenennen)
+### Phase 3: Texteditor & Schreiboberfläche (Vollständig)
 
-#### 1. Swipe-to-Delete implementiert
-- `.onDelete(perform:)` Modifier in der Liste
-- Bestätigungsdialog mit `.confirmationDialog`
-- Sicheres Löschen mit `confirmDelete()` / `cancelDelete()`
+#### 1. Vollwertiger Texteditor
+- `TextEditor` mit anpassbarer Schriftgröße (16-48pt)
+- Schriftgröße wird in UserDefaults gespeichert
+- Zeilenlinien-Hintergrund (ein/aus schaltbar)
+- Scrollbarer Textbereich
 
-#### 2. Umbenennen per Doppeltipp implementiert
-- `.onTapGesture(count: 2)` für Doppeltipp-Erkennung
-- Alert-Dialog mit TextField für neuen Namen
-- Validierung: Leere Namen werden abgelehnt
-- `prepareRename()` / `confirmRename()` / `cancelRename()`
+#### 2. Undo/Redo-System
+- Kompletter Undo-Stack (max. 50 Einträge)
+- Redo-Funktionalität
+- Toolbar-Buttons für Undo/Redo
+- `canUndo` / `canRedo` Properties
 
-#### 3. ViewModel erweitert
-Neue Properties in `DocumentListViewModel`:
-```swift
-@Published var showDeleteConfirmation: Bool = false
-@Published var showRenameDialog: Bool = false
-@Published var selectedDocument: Document?
-@Published var newDocumentName: String = ""
-```
+#### 3. Auto-Save-System
+- Automatisches Speichern alle 30 Sekunden
+- Speichern beim Verlassen der View (`onDisappear`)
+- Visueller Speicher-Indikator
+- `hasUnsavedChanges` Status-Anzeige
 
-Neue Methoden:
-- `prepareDelete(at:)` - Vorbereitung fürs Löschen
-- `confirmDelete()` - Löschen bestätigen
-- `cancelDelete()` - Löschen abbrechen
-- `prepareRename(_:)` - Vorbereitung fürs Umbenennen
-- `confirmRename()` - Umbenennen bestätigen
-- `cancelRename()` - Umbenennen abbrechen
+#### 4. Statistik-Leiste
+- Wortzähler (berechnet live)
+- Zeichenzähler
+- "Nicht gespeichert" Indikator
 
-#### 4. 10 neue Unit-Tests
-- `testPrepareDeleteSetsSelectedDocument`
-- `testConfirmDeleteRemovesDocument`
-- `testCancelDeleteKeepsDocument`
-- `testDeleteWithoutServiceShowsError`
-- `testPrepareRenameSetsSelectedDocumentAndName`
-- `testConfirmRenameUpdatesDocument`
-- `testConfirmRenameWithEmptyNameShowsError`
-- `testCancelRenameResetsState`
-- `testRenameWithoutServiceShowsError`
+#### 5. Titel-Bearbeitung
+- Titel direkt im Editor bearbeitbar
+- Alert-Dialog mit TextField
+- Validierung (leerer Titel nicht erlaubt)
+
+#### 6. 18 neue Unit-Tests
+- Initialisierungs-Tests
+- Text-Content-Binding-Tests
+- Save-Tests
+- Schriftgröße-Tests (inkl. Min/Max-Limits)
+- Undo/Redo-Tests
+- Statistik-Tests
+- Titel-Update-Tests
+- Error-Handling-Tests
 
 ---
 
 ## Geänderte Dateien
 
-1. **DocumentListViewModel.swift**
-   - Neue Properties für Delete/Rename-Dialoge
-   - Neue Methoden für CRUD-Operationen
+1. **EditorViewModel.swift** (komplett überarbeitet)
+   - `textContent` Binding mit Undo-Tracking
+   - `fontSize`, `showLineGuides` Settings
+   - Undo/Redo-Stack und Methoden
+   - Auto-Save Timer
+   - Wort-/Zeichenzähler
 
-2. **DocumentListView.swift**
-   - Swipe-to-Delete (`.onDelete`)
-   - Doppeltipp zum Umbenennen (`.onTapGesture(count: 2)`)
-   - Bestätigungsdialog (`.confirmationDialog`)
-   - Umbenennen-Dialog (`.alert` mit TextField)
+2. **EditorView.swift** (komplett überarbeitet)
+   - Statistik-Leiste
+   - Zeilenlinien-Hintergrund
+   - Toolbar mit allen Features
+   - Speicher-Indikator
+   - Titel-Bearbeitung
 
-3. **DocumentListViewModelTests.swift**
-   - 10 neue Tests für Phase 2
+3. **EditorViewModelTests.swift** (erweitert)
+   - 18 neue Tests (vorher 9)
 
 4. **README.md**
-   - Phase 2 als abgeschlossen markiert
-   - Features aktualisiert
+   - Phase 3 als abgeschlossen markiert
 
 ---
 
 ## Test-Status
 
-**Gesamt: 44 Tests**
+**Gesamt: 53 Tests**
 
-### Unit-Tests (39 Tests)
+### Unit-Tests (48 Tests)
 - DocumentTests.swift (10 Tests)
-- DocumentListViewModelTests.swift (20 Tests) - +10 neu
-- EditorViewModelTests.swift (9 Tests)
+- DocumentListViewModelTests.swift (20 Tests)
+- EditorViewModelTests.swift (18 Tests) - +9 neu
 
 ### UI-Tests (5 Tests)
 - AppLaunchTests.swift
 
 ---
 
-## Nächste Schritte: Phase 3
+## Architektur-Details Phase 3
 
-### Texteditor & Schreiboberfläche
-
-1. **Editor-View implementieren**
-   - Großes Textfeld für Kinder
-   - Zeilenlinien (wie Schreibpapier)
-   - Anpassbare Schriftgröße
-
-2. **Features**
-   - Cursor-Navigation
-   - Einfache Formatierung (fett, kursiv)
-   - Speichern bei Änderungen
-
-3. **UX für Kinder**
-   - Große Touch-Targets
-   - Klare visuelle Hinweise
-   - Einfache Bedienung
-
----
-
-## Quick-Start für Phase 3
-
+### EditorViewModel Properties
 ```swift
-// EditorView erweitern mit:
-- TextEditor mit großer Schrift
-- Toolbar für Formatierung
-- Auto-Save beim Verlassen
+@Published var textContent: String        // Text mit Undo-Tracking
+@Published var fontSize: CGFloat = 24     // 16-48pt, gespeichert
+@Published var showLineGuides: Bool       // Zeilenlinien
+@Published var hasUnsavedChanges: Bool    // Speicher-Status
+@Published var showSaveIndicator: Bool    // UI-Feedback
 
-// EditorViewModel erweitern mit:
-- Text-Binding zum Document
-- Formatierungs-Methoden
-- Save-Logik
+var canUndo: Bool                         // Undo verfügbar?
+var canRedo: Bool                         // Redo verfügbar?
+var wordCount: Int                        // Computed property
+var characterCount: Int                   // Computed property
+```
+
+### EditorViewModel Methoden
+```swift
+func saveDocument()                       // Manuelles Speichern
+func saveOnDisappear()                    // Speichern bei Verlassen
+func increaseFontSize()                   // +2pt (max 48)
+func decreaseFontSize()                   // -2pt (min 16)
+func undo()                               // Letzte Änderung rückgängig
+func redo()                               // Wiederherstellen
+func updateTitle(_ newTitle: String)      // Titel ändern
+```
+
+### EditorView Subviews
+```swift
+StatisticsBar                             // Wörter, Zeichen, Status
+LineGuidesView                            // Zeilenlinien-Hintergrund
+SaveIndicator                             // "Gespeichert" Toast
+LoadingView                               // Lade-Animation
+ErrorStateView                            // Fehler-Anzeige
 ```
 
 ---
 
-**Status:** Bereit für Phase 3
+## Nächste Schritte: Phase 4
+
+### Lautierende Tastatur & TTS
+
+1. **AVSpeechSynthesizer Integration**
+   - TTSService erstellen
+   - Deutsche Stimme konfigurieren
+   - Geschwindigkeit anpassbar
+
+2. **Lautierungs-Modi**
+   - Buchstabe für Buchstabe
+   - Wort für Wort
+   - Ganzer Text
+
+3. **Tastatur-Integration**
+   - Jeden Tastendruck vorlesen
+   - Externe Tastatur unterstützen
+   - Feedback-Sounds
+
+4. **Einstellungen**
+   - Lautierung ein/aus
+   - Geschwindigkeit (langsam/normal/schnell)
+   - Stimme auswählen
+
+---
+
+## Quick-Start für Phase 4
+
+```swift
+// Neuer Service: TTSService.swift
+class TTSService: ObservableObject {
+    private let synthesizer = AVSpeechSynthesizer()
+
+    func speakLetter(_ letter: String)
+    func speakWord(_ word: String)
+    func speakText(_ text: String)
+    func stop()
+}
+
+// EditorView erweitern:
+- Tastatureingaben abfangen
+- TTSService aufrufen
+- Einstellungen für Lautierung
+```
+
+---
+
+**Status:** Bereit für Phase 4
