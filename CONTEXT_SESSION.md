@@ -1,163 +1,90 @@
 # Session Context - Schreiben 2.0
 
 **Datum:** 2026-03-02
-**Status:** Phase 3 abgeschlossen
+**Status:** Phase 3 abgeschlossen ✅
 **Nächster Schritt:** Phase 4 - Lautierende Tastatur & TTS
 
 ---
 
-## Was wurde heute erreicht?
+## 📋 Projekt-Übersicht
 
-### Phase 3: Texteditor & Schreiboberfläche (Vollständig)
+**Schreiben 2.0** ist eine iPad-App zum Schreibenlernen für Kinder.
 
-#### 1. Vollwertiger Texteditor
-- `TextEditor` mit anpassbarer Schriftgröße (16-48pt)
-- Schriftgröße wird in UserDefaults gespeichert
-- Zeilenlinien-Hintergrund (ein/aus schaltbar)
-- Scrollbarer Textbereich
-
-#### 2. Undo/Redo-System
-- Kompletter Undo-Stack (max. 50 Einträge)
-- Redo-Funktionalität
-- Toolbar-Buttons für Undo/Redo
-- `canUndo` / `canRedo` Properties
-
-#### 3. Auto-Save-System
-- Automatisches Speichern alle 30 Sekunden
-- Speichern beim Verlassen der View (`onDisappear`)
-- Visueller Speicher-Indikator
-- `hasUnsavedChanges` Status-Anzeige
-
-#### 4. Statistik-Leiste
-- Wortzähler (berechnet live)
-- Zeichenzähler
-- "Nicht gespeichert" Indikator
-
-#### 5. Titel-Bearbeitung
-- Titel direkt im Editor bearbeitbar
-- Alert-Dialog mit TextField
-- Validierung (leerer Titel nicht erlaubt)
-
-#### 6. 18 neue Unit-Tests
-- Initialisierungs-Tests
-- Text-Content-Binding-Tests
-- Save-Tests
-- Schriftgröße-Tests (inkl. Min/Max-Limits)
-- Undo/Redo-Tests
-- Statistik-Tests
-- Titel-Update-Tests
-- Error-Handling-Tests
+**Repository:** https://github.com/Yolocb/Schreiben-2.0
+**Branch:** main
+**Letzter Commit:** `f2a4200` - [Phase 3] Texteditor & Schreiboberfläche
 
 ---
 
-## Geänderte Dateien
+## ✅ Abgeschlossene Phasen
 
-1. **EditorViewModel.swift** (komplett überarbeitet)
-   - `textContent` Binding mit Undo-Tracking
-   - `fontSize`, `showLineGuides` Settings
-   - Undo/Redo-Stack und Methoden
-   - Auto-Save Timer
-   - Wort-/Zeichenzähler
+### Phase 1: Projekt-Setup & Architektur
+- MVVM-Architektur mit SwiftUI
+- Core Data Persistenz
+- AppCoordinator für Dependency Injection
+- Grundlegende Navigation
 
-2. **EditorView.swift** (komplett überarbeitet)
-   - Statistik-Leiste
-   - Zeilenlinien-Hintergrund
-   - Toolbar mit allen Features
-   - Speicher-Indikator
-   - Titel-Bearbeitung
+### Phase 2: Dokumentenverwaltung
+- Swipe-to-Delete mit Bestätigungsdialog
+- Umbenennen per Doppeltipp
+- 10 Unit-Tests
 
-3. **EditorViewModelTests.swift** (erweitert)
-   - 18 neue Tests (vorher 9)
-
-4. **README.md**
-   - Phase 3 als abgeschlossen markiert
-
----
-
-## Test-Status
-
-**Gesamt: 53 Tests**
-
-### Unit-Tests (48 Tests)
-- DocumentTests.swift (10 Tests)
-- DocumentListViewModelTests.swift (20 Tests)
-- EditorViewModelTests.swift (18 Tests) - +9 neu
-
-### UI-Tests (5 Tests)
-- AppLaunchTests.swift
+### Phase 3: Texteditor & Schreiboberfläche
+- Vollwertiger TextEditor (16-48pt Schriftgröße)
+- Zeilenlinien-Hintergrund
+- Undo/Redo-System (50 Einträge)
+- Auto-Save (30s + onDisappear)
+- Wort-/Zeichenzähler
+- Titel-Bearbeitung im Editor
+- 9 neue Unit-Tests
 
 ---
 
-## Architektur-Details Phase 3
+## 🧪 Test-Status
 
-### EditorViewModel Properties
-```swift
-@Published var textContent: String        // Text mit Undo-Tracking
-@Published var fontSize: CGFloat = 24     // 16-48pt, gespeichert
-@Published var showLineGuides: Bool       // Zeilenlinien
-@Published var hasUnsavedChanges: Bool    // Speicher-Status
-@Published var showSaveIndicator: Bool    // UI-Feedback
+**Gesamt: 53 Tests ✅**
 
-var canUndo: Bool                         // Undo verfügbar?
-var canRedo: Bool                         // Redo verfügbar?
-var wordCount: Int                        // Computed property
-var characterCount: Int                   // Computed property
-```
-
-### EditorViewModel Methoden
-```swift
-func saveDocument()                       // Manuelles Speichern
-func saveOnDisappear()                    // Speichern bei Verlassen
-func increaseFontSize()                   // +2pt (max 48)
-func decreaseFontSize()                   // -2pt (min 16)
-func undo()                               // Letzte Änderung rückgängig
-func redo()                               // Wiederherstellen
-func updateTitle(_ newTitle: String)      // Titel ändern
-```
-
-### EditorView Subviews
-```swift
-StatisticsBar                             // Wörter, Zeichen, Status
-LineGuidesView                            // Zeilenlinien-Hintergrund
-SaveIndicator                             // "Gespeichert" Toast
-LoadingView                               // Lade-Animation
-ErrorStateView                            // Fehler-Anzeige
-```
+| Test-Datei | Anzahl |
+|------------|--------|
+| DocumentTests.swift | 10 |
+| DocumentListViewModelTests.swift | 20 |
+| EditorViewModelTests.swift | 18 |
+| AppLaunchTests.swift (UI) | 5 |
 
 ---
 
-## Nächste Schritte: Phase 4
+## 🚀 Phase 4: Lautierende Tastatur & TTS
 
-### Lautierende Tastatur & TTS
+### Ziele
 
-1. **AVSpeechSynthesizer Integration**
-   - TTSService erstellen
-   - Deutsche Stimme konfigurieren
-   - Geschwindigkeit anpassbar
+1. **TTSService erstellen**
+   - AVSpeechSynthesizer Integration
+   - Deutsche Stimme
+   - Anpassbare Geschwindigkeit
 
 2. **Lautierungs-Modi**
-   - Buchstabe für Buchstabe
-   - Wort für Wort
-   - Ganzer Text
+   - Buchstabe für Buchstabe vorlesen
+   - Wort für Wort vorlesen
+   - Ganzen Text vorlesen
 
 3. **Tastatur-Integration**
    - Jeden Tastendruck vorlesen
    - Externe Tastatur unterstützen
-   - Feedback-Sounds
 
 4. **Einstellungen**
    - Lautierung ein/aus
-   - Geschwindigkeit (langsam/normal/schnell)
+   - Geschwindigkeit wählen
    - Stimme auswählen
 
----
-
-## Quick-Start für Phase 4
+### Implementierungs-Plan
 
 ```swift
-// Neuer Service: TTSService.swift
+// 1. Neuer Service: Core/Services/TTSService.swift
 class TTSService: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
+
+    @Published var isEnabled: Bool = true
+    @Published var rate: Float = 0.4  // 0.0-1.0
 
     func speakLetter(_ letter: String)
     func speakWord(_ word: String)
@@ -165,12 +92,119 @@ class TTSService: ObservableObject {
     func stop()
 }
 
-// EditorView erweitern:
-- Tastatureingaben abfangen
-- TTSService aufrufen
-- Einstellungen für Lautierung
+// 2. AppCoordinator erweitern
+class AppCoordinator: ObservableObject {
+    let documentService: DocumentService
+    let ttsService: TTSService  // NEU
+}
+
+// 3. EditorViewModel erweitern
+- TTSService injizieren
+- Bei Texteingabe: Buchstaben/Wort vorlesen
+- Toolbar-Button für TTS
+
+// 4. SettingsView implementieren
+- TTS ein/aus Toggle
+- Geschwindigkeits-Slider
+- Stimmen-Auswahl
+```
+
+### Dateien zu erstellen/ändern
+
+| Datei | Aktion |
+|-------|--------|
+| `Core/Services/TTSService.swift` | Neu erstellen |
+| `App/AppCoordinator.swift` | TTSService hinzufügen |
+| `UI/Editor/EditorViewModel.swift` | TTS-Integration |
+| `UI/Editor/EditorView.swift` | TTS-Toolbar |
+| `UI/Settings/SettingsView.swift` | TTS-Einstellungen |
+| `Tests/TTSServiceTests.swift` | Neu erstellen |
+
+---
+
+## 📁 Aktuelle Projektstruktur
+
+```
+Schreiben20/
+├── App/
+│   ├── AppCoordinator.swift
+│   └── Schreiben20App.swift
+├── Core/
+│   ├── Models/
+│   │   └── Document.swift
+│   ├── Persistence/
+│   │   ├── PersistenceController.swift
+│   │   ├── DocumentEntity+CoreDataClass.swift
+│   │   ├── DocumentEntity+CoreDataProperties.swift
+│   │   ├── TaskEntity+CoreDataClass.swift
+│   │   └── TaskEntity+CoreDataProperties.swift
+│   └── Services/
+│       └── DocumentService.swift
+└── UI/
+    ├── DocumentList/
+    │   ├── DocumentListView.swift
+    │   └── DocumentListViewModel.swift
+    ├── Editor/
+    │   ├── EditorView.swift
+    │   └── EditorViewModel.swift
+    └── Settings/
+        └── SettingsView.swift
 ```
 
 ---
 
-**Status:** Bereit für Phase 4
+## 💡 Quick-Start für nächste Session
+
+Starte mit diesem Kommando:
+```
+"Lass uns mit Phase 4 weitermachen: Lautierende Tastatur und Text-to-Speech"
+```
+
+### Erste Schritte in Phase 4:
+
+1. **TTSService erstellen** - Grundgerüst mit AVSpeechSynthesizer
+2. **AppCoordinator erweitern** - TTSService injizieren
+3. **SettingsView implementieren** - TTS-Einstellungen UI
+4. **Editor integrieren** - Buchstaben bei Eingabe vorlesen
+5. **Tests schreiben** - TTSService testen
+
+---
+
+## ⚠️ Wichtige Hinweise
+
+### Xcode-Projekt
+- Das `.xcodeproj` muss auf einem Mac erstellt werden
+- Alle Swift-Dateien sind vorhanden und getestet (Code-Review)
+- Core Data Model (.xcdatamodeld) muss in Xcode geöffnet werden
+
+### ViewModel-Pattern (WICHTIG!)
+```swift
+// ViewModels werden OHNE Service erstellt
+let viewModel = EditorViewModel(documentID: id)
+
+// Service wird im onAppear gesetzt
+viewModel.setDocumentService(coordinator.documentService)
+```
+
+### UserDefaults Keys
+- `schreiben20.fontSize` - Schriftgröße (Double)
+- `schreiben20.showLineGuides` - Zeilenlinien (Bool)
+- `schreiben20.migrated_to_coredata` - Migration-Flag
+
+---
+
+## 📊 Git-Historie
+
+```
+f2a4200 [Phase 3] Texteditor & Schreiboberfläche
+2e09899 [Phase 2] Dokumentenverwaltung: Löschen und Umbenennen
+be52405 Docs: Session Context für nächste Arbeitseinheit
+6e60f6b Merge: Resolve README.md conflict
+3526fab [Phase 1] Initial Commit: Projekt-Setup mit Bugfixes
+a5afc95 Initial commit
+```
+
+---
+
+**Status:** Bereit für Phase 4 🚀
+**Geschätzte Zeit Phase 4:** 2-3 Stunden
