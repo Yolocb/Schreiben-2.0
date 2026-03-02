@@ -44,7 +44,11 @@ struct DocumentListView: View {
                         NavigationLink(destination: EditorView(documentID: document.id)) {
                             DocumentRow(document: document)
                         }
+                        .onTapGesture(count: 2) {
+                            viewModel.prepareRename(document)
+                        }
                     }
+                    .onDelete(perform: viewModel.prepareDelete)
                 }
             }
         }
@@ -68,6 +72,35 @@ struct DocumentListView: View {
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
             }
+        }
+        // Lösch-Bestätigungsdialog
+        .confirmationDialog(
+            "Dokument löschen?",
+            isPresented: $viewModel.showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Löschen", role: .destructive) {
+                viewModel.confirmDelete()
+            }
+            Button("Abbrechen", role: .cancel) {
+                viewModel.cancelDelete()
+            }
+        } message: {
+            if let document = viewModel.selectedDocument {
+                Text("\"\(document.title)\" wird unwiderruflich gelöscht.")
+            }
+        }
+        // Umbenennen-Dialog
+        .alert("Dokument umbenennen", isPresented: $viewModel.showRenameDialog) {
+            TextField("Neuer Name", text: $viewModel.newDocumentName)
+            Button("Abbrechen", role: .cancel) {
+                viewModel.cancelRename()
+            }
+            Button("Speichern") {
+                viewModel.confirmRename()
+            }
+        } message: {
+            Text("Gib einen neuen Namen für das Dokument ein.")
         }
         .onAppear {
             // Injiziere den Service aus dem Coordinator

@@ -172,4 +172,200 @@ final class DocumentListViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.showError)
         XCTAssertNotNil(viewModel.errorMessage)
     }
+
+    // MARK: - Phase 2: Delete Tests
+
+    func testPrepareDeleteSetsSelectedDocument() {
+        // Arrange
+        let expectation = expectation(description: "Document should be selected for deletion")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            _ = self.mockService.createDocument(title: "Delete Test")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                // Act
+                self.viewModel.prepareDelete(at: IndexSet(integer: 0))
+                expectation.fulfill()
+            }
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertNotNil(viewModel.selectedDocument)
+        XCTAssertEqual(viewModel.selectedDocument?.title, "Delete Test")
+        XCTAssertTrue(viewModel.showDeleteConfirmation)
+    }
+
+    func testConfirmDeleteRemovesDocument() {
+        // Arrange
+        let expectation = expectation(description: "Document should be deleted")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            _ = self.mockService.createDocument(title: "To Be Deleted")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.viewModel.prepareDelete(at: IndexSet(integer: 0))
+
+                // Act
+                self.viewModel.confirmDelete()
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    expectation.fulfill()
+                }
+            }
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertTrue(viewModel.documents.isEmpty)
+        XCTAssertNil(viewModel.selectedDocument)
+    }
+
+    func testCancelDeleteKeepsDocument() {
+        // Arrange
+        let expectation = expectation(description: "Document should not be deleted")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            _ = self.mockService.createDocument(title: "Keep Me")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.viewModel.prepareDelete(at: IndexSet(integer: 0))
+
+                // Act
+                self.viewModel.cancelDelete()
+                expectation.fulfill()
+            }
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.documents.count, 1)
+        XCTAssertNil(viewModel.selectedDocument)
+        XCTAssertFalse(viewModel.showDeleteConfirmation)
+    }
+
+    func testDeleteWithoutServiceShowsError() {
+        // Arrange
+        viewModel.selectedDocument = Document(
+            id: UUID(),
+            title: "Test",
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+
+        // Act
+        viewModel.confirmDelete()
+
+        // Assert
+        XCTAssertTrue(viewModel.showError)
+        XCTAssertNotNil(viewModel.errorMessage)
+    }
+
+    // MARK: - Phase 2: Rename Tests
+
+    func testPrepareRenameSetsSelectedDocumentAndName() {
+        // Arrange
+        let document = Document(
+            id: UUID(),
+            title: "Original Name",
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+
+        // Act
+        viewModel.prepareRename(document)
+
+        // Assert
+        XCTAssertNotNil(viewModel.selectedDocument)
+        XCTAssertEqual(viewModel.selectedDocument?.title, "Original Name")
+        XCTAssertEqual(viewModel.newDocumentName, "Original Name")
+        XCTAssertTrue(viewModel.showRenameDialog)
+    }
+
+    func testConfirmRenameUpdatesDocument() {
+        // Arrange
+        let expectation = expectation(description: "Document should be renamed")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            let doc = self.mockService.createDocument(title: "Old Name")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.viewModel.prepareRename(doc)
+                self.viewModel.newDocumentName = "New Name"
+
+                // Act
+                self.viewModel.confirmRename()
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    expectation.fulfill()
+                }
+            }
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.documents.first?.title, "New Name")
+        XCTAssertNil(viewModel.selectedDocument)
+        XCTAssertTrue(viewModel.newDocumentName.isEmpty)
+    }
+
+    func testConfirmRenameWithEmptyNameShowsError() {
+        // Arrange
+        viewModel.setDocumentService(mockService)
+        viewModel.selectedDocument = Document(
+            id: UUID(),
+            title: "Test",
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        viewModel.newDocumentName = "   " // Nur Leerzeichen
+
+        // Act
+        viewModel.confirmRename()
+
+        // Assert
+        XCTAssertTrue(viewModel.showError)
+        XCTAssertTrue(viewModel.errorMessage?.contains("leer") ?? false)
+    }
+
+    func testCancelRenameResetsState() {
+        // Arrange
+        let document = Document(
+            id: UUID(),
+            title: "Test",
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        viewModel.prepareRename(document)
+
+        // Act
+        viewModel.cancelRename()
+
+        // Assert
+        XCTAssertNil(viewModel.selectedDocument)
+        XCTAssertTrue(viewModel.newDocumentName.isEmpty)
+        XCTAssertFalse(viewModel.showRenameDialog)
+    }
+
+    func testRenameWithoutServiceShowsError() {
+        // Arrange
+        viewModel.selectedDocument = Document(
+            id: UUID(),
+            title: "Test",
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        viewModel.newDocumentName = "New Name"
+
+        // Act
+        viewModel.confirmRename()
+
+        // Assert
+        XCTAssertTrue(viewModel.showError)
+        XCTAssertNotNil(viewModel.errorMessage)
+    }
 }

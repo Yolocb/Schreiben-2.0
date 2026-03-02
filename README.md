@@ -37,11 +37,11 @@ Schreiben20/
 - Datenmodell für Dokumente
 - Unit-Tests und UI-Tests
 
-### 📅 Phase 2: Dokumentliste & Verwaltung (Nächster Schritt)
-- Vollständige CRUD-Operationen
+### ✅ Phase 2: Dokumentliste & Verwaltung (Abgeschlossen)
+- Swipe-to-Delete mit Bestätigungsdialog
 - Umbenennen per Doppeltipp
-- Löschen per Long-Press mit Bestätigung
-- Persistenz mit UserDefaults/Core Data
+- Core Data Persistenz
+- 10 neue Unit-Tests für Verwaltungsfunktionen
 
 ### 📅 Phase 3: Texteditor & Schreiboberfläche
 - Editor mit großer Schrift
@@ -101,7 +101,7 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 - **Sprache**: Swift 5.9+
 - **UI-Framework**: SwiftUI
 - **Architektur**: MVVM
-- **Persistenz**: UserDefaults (Phase 1), später Core Data
+- **Persistenz**: Core Data
 - **TTS**: AVSpeechSynthesizer
 - **Tests**: XCTest
 - **Zielplattform**: iPadOS 16.0+
@@ -113,13 +113,17 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 3. iPad-Simulator auswählen
 4. `cmd + R` zum Starten
 
-## 🎯 Aktuelle Features (Phase 1)
+## 🎯 Aktuelle Features (Phase 2)
 
 - ✅ App startet mit SwiftUI-Lifecycle
 - ✅ Navigation zwischen Dokumentliste, Editor und Einstellungen
 - ✅ Datenmodell für Dokumente mit ID, Titel, Datum, Text, Bildern und Aufgaben
 - ✅ DocumentService mit CRUD-Operationen
-- ✅ Unit-Tests für Modelle und Service
+- ✅ Core Data Persistenz mit Migration
+- ✅ Swipe-to-Delete mit Bestätigungsdialog
+- ✅ Umbenennen per Doppeltipp
+- ✅ Error-Handling und Loading-States
+- ✅ Unit-Tests für Modelle und ViewModels
 - ✅ UI-Tests für App-Launch und Navigation
 
 ## 📝 Commit-Richtlinien
@@ -157,4 +161,4 @@ Dieses Projekt ist ein Lern- und Demonstrationsprojekt.
 
 ---
 
-**Status**: Phase 1 abgeschlossen ✅ | Nächste Phase: Dokumentenverwaltung
+**Status**: Phase 2 abgeschlossen ✅ | Nächste Phase: Texteditor & Schreiboberfläche
