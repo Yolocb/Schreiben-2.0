@@ -13,7 +13,11 @@ class AppCoordinator: ObservableObject {
     // Service für Dokumentenverwaltung
     let documentService: DocumentService
 
-    init(documentService: DocumentService = DocumentService()) {
+    // Service für Text-to-Speech / Lautierung
+    let ttsService: TTSService
+
+    init(documentService: DocumentService = DocumentService(), ttsService: TTSService = TTSService()) {
         self.documentService = documentService
+        self.ttsService = ttsService
     }
 }

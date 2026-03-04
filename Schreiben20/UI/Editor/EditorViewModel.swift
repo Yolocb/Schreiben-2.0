@@ -20,6 +20,11 @@ class EditorViewModel: ObservableObject {
             if textContent != oldValue {
                 hasUnsavedChanges = true
                 addToUndoStack(oldValue)
+
+                // TTS: Lautierung bei Texteingabe
+                if !isUndoRedoAction {
+                    handleTTSForTextChange(oldText: oldValue, newText: textContent)
+                }
             }
         }
     }
@@ -75,6 +80,9 @@ class EditorViewModel: ObservableObject {
 
     /// Referenz zum DocumentService
     private(set) var documentService: DocumentService?
+
+    /// Referenz zum TTSService
+    private(set) var ttsService: TTSService?
 
     private let documentID: UUID
     private var cancellables = Set<AnyCancellable>()
@@ -170,6 +178,28 @@ class EditorViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Text-to-Speech
+
+    /// Setzt den TTSService
+    func setTTSService(_ service: TTSService) {
+        self.ttsService = service
+    }
+
+    /// Liest den gesamten Text vor
+    func speakFullText() {
+        ttsService?.speakText(textContent)
+    }
+
+    /// Stoppt die Sprachausgabe
+    func stopSpeaking() {
+        ttsService?.stop()
+    }
+
+    /// Wird gerade vorgelesen
+    var isSpeaking: Bool {
+        ttsService?.isSpeaking ?? false
+    }
+
     // MARK: - Titel bearbeiten
 
     /// Aktualisiert den Dokumenttitel
@@ -227,6 +257,32 @@ class EditorViewModel: ObservableObject {
                     self?.saveDocument()
                 }
             }
+    }
+
+    /// TTS-Logik bei Textänderung
+    private func handleTTSForTextChange(oldText: String, newText: String) {
+        guard let ttsService = ttsService, ttsService.isEnabled else { return }
+        guard newText.count > oldText.count else { return } // Nur bei Eingabe, nicht bei Löschen
+
+        let readingMode = ttsService.readingMode
+        guard readingMode != .off else { return }
+
+        let addedCount = newText.count - oldText.count
+
+        if readingMode == .letter {
+            // Letztes eingegebenes Zeichen vorlesen
+            let newChar = String(newText.suffix(addedCount))
+            ttsService.speakLetter(newChar)
+        } else if readingMode == .word {
+            // Prüfe ob ein Wort abgeschlossen wurde (Leerzeichen/Newline)
+            if let lastChar = newText.last, (lastChar.isWhitespace || lastChar.isNewline) {
+                // Letztes abgeschlossenes Wort finden
+                let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let lastWord = trimmed.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).last {
+                    ttsService.speakWord(String(lastWord))
+                }
+            }
+        }
     }
 
     /// Zeigt eine Fehlermeldung an

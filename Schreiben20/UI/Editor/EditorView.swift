@@ -60,8 +60,10 @@ struct EditorView: View {
         }
         .onAppear {
             viewModel.setDocumentService(coordinator.documentService)
+            viewModel.setTTSService(coordinator.ttsService)
         }
         .onDisappear {
+            viewModel.stopSpeaking()
             viewModel.saveOnDisappear()
         }
     }
@@ -103,13 +105,34 @@ struct EditorView: View {
 
     @ToolbarContentBuilder
     private var editorToolbar: some ToolbarContent {
-        // Linke Seite: Titel bearbeiten
+        // Linke Seite: Titel bearbeiten + TTS
         ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                editedTitle = viewModel.document?.title ?? ""
-                isEditingTitle = true
-            } label: {
-                Image(systemName: "pencil")
+            HStack(spacing: 12) {
+                Button {
+                    editedTitle = viewModel.document?.title ?? ""
+                    isEditingTitle = true
+                } label: {
+                    Image(systemName: "pencil")
+                }
+
+                // Text vorlesen / stoppen
+                Button {
+                    if coordinator.ttsService.isSpeaking {
+                        viewModel.stopSpeaking()
+                    } else {
+                        viewModel.speakFullText()
+                    }
+                } label: {
+                    Image(systemName: coordinator.ttsService.isSpeaking ? "stop.fill" : "speaker.wave.2")
+                }
+                .disabled(!coordinator.ttsService.isEnabled || viewModel.textContent.isEmpty)
+
+                // Lautierung ein/aus Toggle
+                Button {
+                    coordinator.ttsService.isEnabled.toggle()
+                } label: {
+                    Image(systemName: coordinator.ttsService.isEnabled ? "speaker.wave.2.fill" : "speaker.slash")
+                }
             }
         }
 

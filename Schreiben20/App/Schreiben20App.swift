@@ -16,9 +16,10 @@ struct Schreiben20App: App {
     @StateObject private var coordinator: AppCoordinator
 
     init() {
-        // Initialisiere Coordinator mit Core Data
+        // Initialisiere Coordinator mit Core Data und TTS
         let service = DocumentService(persistenceController: PersistenceController.shared)
-        _coordinator = StateObject(wrappedValue: AppCoordinator(documentService: service))
+        let tts = TTSService()
+        _coordinator = StateObject(wrappedValue: AppCoordinator(documentService: service, ttsService: tts))
     }
 
     var body: some Scene {

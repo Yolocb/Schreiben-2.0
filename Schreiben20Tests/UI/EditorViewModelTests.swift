@@ -390,4 +390,94 @@ final class EditorViewModelTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
         XCTAssertFalse(viewModel.isLoading)
     }
+
+    // MARK: - TTS Integration Tests
+
+    func testSetTTSService() {
+        // Arrange
+        let ttsService = TTSService()
+
+        // Act
+        viewModel.setTTSService(ttsService)
+
+        // Assert
+        XCTAssertNotNil(viewModel.ttsService)
+    }
+
+    func testIsSpeakingDefaultFalse() {
+        // Assert: Ohne TTSService ist isSpeaking false
+        XCTAssertFalse(viewModel.isSpeaking)
+    }
+
+    func testIsSpeakingWithTTSService() {
+        // Arrange
+        let ttsService = TTSService()
+        viewModel.setTTSService(ttsService)
+
+        // Assert: Nicht sprechend nach Init
+        XCTAssertFalse(viewModel.isSpeaking)
+    }
+
+    func testStopSpeakingWithoutService() {
+        // Act: Sollte nicht abstürzen
+        viewModel.stopSpeaking()
+
+        // Assert
+        XCTAssertFalse(viewModel.isSpeaking)
+    }
+
+    func testSpeakFullTextWithoutService() {
+        // Act: Sollte nicht abstürzen
+        viewModel.speakFullText()
+
+        // Assert
+        XCTAssertFalse(viewModel.isSpeaking)
+    }
+
+    func testTTSNotTriggeredDuringUndo() {
+        // Arrange
+        let ttsService = TTSService()
+        ttsService.readingMode = .letter
+        viewModel.setTTSService(ttsService)
+
+        let expectation = expectation(description: "Undo should work without TTS crash")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            self.viewModel.textContent = "Test"
+            self.viewModel.textContent = "Test2"
+
+            // Act: Undo sollte TTS nicht triggern
+            self.viewModel.undo()
+            expectation.fulfill()
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.textContent, "Test")
+    }
+
+    func testTTSNotTriggeredDuringRedo() {
+        // Arrange
+        let ttsService = TTSService()
+        ttsService.readingMode = .letter
+        viewModel.setTTSService(ttsService)
+
+        let expectation = expectation(description: "Redo should work without TTS crash")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            self.viewModel.textContent = "Test"
+            self.viewModel.textContent = "Test2"
+            self.viewModel.undo()
+
+            // Act: Redo sollte TTS nicht triggern
+            self.viewModel.redo()
+            expectation.fulfill()
+        }
+
+        // Assert
+        wait(for: [expectation], timeout: 1.0)
+        XCTAssertEqual(viewModel.textContent, "Test2")
+    }
 }
