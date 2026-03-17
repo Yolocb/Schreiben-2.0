@@ -6,6 +6,31 @@
 
 ---
 
+## ⚠️ XCODE-CHECKLISTE — Beim ersten Öffnen erledigen!
+
+> Diese Schritte können NUR in Xcode auf dem Mac gemacht werden.
+> Ohne sie wird die App crashen bzw. der PhotoPicker nicht funktionieren.
+
+- [ ] **1. Core Data Model aktualisieren** (`Schreiben20.xcdatamodeld`)
+  - Neue Entity **MediaItemEntity** anlegen mit Attributen:
+    - `id` → UUID
+    - `type` → String
+    - `createdAt` → Date
+    - `sortOrder` → Integer 16
+    - `caption` → String
+  - Relationship in MediaItemEntity: `document` → Destination: **DocumentEntity**, Inverse: mediaItems
+  - Relationship in DocumentEntity: `mediaItems` → Destination: **MediaItemEntity**, Inverse: document, Type: **To Many**, **Ordered**, Delete Rule: **Cascade**
+
+- [ ] **2. Info.plist ergänzen**
+  - Key: `Privacy - Photo Library Usage Description`
+  - Wert: `Schreiben 2.0 möchte auf deine Fotos zugreifen, um Bilder in Dokumente einzufügen.`
+
+- [ ] **3. Neue Dateien zum Xcode-Projekt hinzufügen**
+  - Alle neuen Swift-Dateien aus Phase 5 müssen im Xcode-Projekt-Navigator sichtbar sein
+  - Falls sie nicht automatisch erkannt werden: Rechtsklick → "Add Files to Schreiben20..."
+
+---
+
 ## Projekt-Übersicht
 
 **Schreiben 2.0** ist eine iPad-App zum Schreibenlernen für Kinder.
