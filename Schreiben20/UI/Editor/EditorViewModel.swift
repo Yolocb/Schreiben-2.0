@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import PencilKit
 
 /// ViewModel für die Editor-Ansicht
 class EditorViewModel: ObservableObject {
@@ -58,6 +59,21 @@ class EditorViewModel: ObservableObject {
     /// Zeigt den Speicher-Indikator kurz an
     @Published var showSaveIndicator: Bool = false
 
+    // MARK: - Medien
+
+    /// Medienelemente des aktuellen Dokuments
+    @Published var mediaItems: [MediaItem] = []
+
+    /// Zeigt den Photo Picker an
+    @Published var showPhotoPicker: Bool = false
+
+    /// Zeigt die Zeichenfläche an
+    @Published var showDrawingCanvas: Bool = false
+
+    /// Zeigt die Detailansicht eines Medienelements
+    @Published var selectedMediaItem: MediaItem?
+    @Published var showMediaDetail: Bool = false
+
     // MARK: - Undo/Redo
 
     private var undoStack: [String] = []
@@ -83,6 +99,9 @@ class EditorViewModel: ObservableObject {
 
     /// Referenz zum TTSService
     private(set) var ttsService: TTSService?
+
+    /// Referenz zum MediaService
+    private(set) var mediaService: MediaService?
 
     private let documentID: UUID
     private var cancellables = Set<AnyCancellable>()
@@ -216,6 +235,53 @@ class EditorViewModel: ObservableObject {
         doc.title = trimmedTitle
         documentService.updateDocument(doc)
         document = doc
+    }
+
+    // MARK: - Medien
+
+    /// Setzt den MediaService
+    func setMediaService(_ service: MediaService) {
+        self.mediaService = service
+        if let doc = document {
+            mediaItems = doc.mediaItems
+        }
+    }
+
+    /// Fügt ein Foto hinzu
+    func addPhoto(_ image: UIImage) {
+        guard var doc = document, let mediaService = mediaService else { return }
+
+        if let item = mediaService.addPhoto(image, to: &doc, caption: "") {
+            document = doc
+            mediaItems = doc.mediaItems
+            _ = item // Verwendung bestätigen
+        }
+    }
+
+    /// Fügt eine Zeichnung hinzu
+    func addDrawing(_ drawing: PKDrawing) {
+        guard var doc = document, let mediaService = mediaService else { return }
+
+        if let item = mediaService.addDrawing(drawing, to: &doc, caption: "") {
+            document = doc
+            mediaItems = doc.mediaItems
+            _ = item
+        }
+    }
+
+    /// Löscht ein Medienelement
+    func deleteMediaItem(_ item: MediaItem) {
+        guard var doc = document, let mediaService = mediaService else { return }
+
+        mediaService.deleteMediaItem(item, from: &doc)
+        document = doc
+        mediaItems = doc.mediaItems
+    }
+
+    /// Öffnet die Detailansicht für ein Medienelement
+    func showDetail(for item: MediaItem) {
+        selectedMediaItem = item
+        showMediaDetail = true
     }
 
     // MARK: - Private Methods

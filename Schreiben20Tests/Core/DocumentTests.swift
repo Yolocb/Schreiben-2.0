@@ -20,6 +20,7 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(document.title, "Test-Dokument")
         XCTAssertTrue(document.textContent.isEmpty)
         XCTAssertTrue(document.imageIDs.isEmpty)
+        XCTAssertTrue(document.mediaItems.isEmpty)
         XCTAssertTrue(document.tasks.isEmpty)
         XCTAssertNotNil(document.id)
         XCTAssertNotNil(document.createdAt)
@@ -181,5 +182,38 @@ final class DocumentTests: XCTestCase {
 
         // Assert
         XCTAssertNil(foundDocument)
+    }
+
+    // MARK: - Document mit MediaItems Tests
+
+    func testDocumentInitWithMediaItems() {
+        // Arrange
+        let mediaItems = [
+            MediaItem(type: .photo, sortOrder: 0),
+            MediaItem(type: .drawing, sortOrder: 1)
+        ]
+
+        // Act
+        let doc = Document(title: "Mit Medien", mediaItems: mediaItems)
+
+        // Assert
+        XCTAssertEqual(doc.mediaItems.count, 2)
+        XCTAssertEqual(doc.mediaItems[0].type, .photo)
+        XCTAssertEqual(doc.mediaItems[1].type, .drawing)
+    }
+
+    func testDocumentCodableWithMediaItems() throws {
+        // Arrange
+        let mediaItems = [MediaItem(type: .photo, sortOrder: 0, caption: "Testbild")]
+        let doc = Document(title: "Codable Media", mediaItems: mediaItems)
+
+        // Act
+        let data = try JSONEncoder().encode(doc)
+        let decoded = try JSONDecoder().decode(Document.self, from: data)
+
+        // Assert
+        XCTAssertEqual(decoded.mediaItems.count, 1)
+        XCTAssertEqual(decoded.mediaItems[0].type, .photo)
+        XCTAssertEqual(decoded.mediaItems[0].caption, "Testbild")
     }
 }

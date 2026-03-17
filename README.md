@@ -20,11 +20,14 @@ Das Projekt folgt dem **MVVM-Pattern** (Model-View-ViewModel) mit klarer Modultr
 Schreiben20/
 ├── App/                    # App-Entry-Point, Koordination
 ├── Core/                   # Geschäftslogik, Modelle
-│   ├── Models/            # Datenmodelle (Document, Task)
-│   └── Services/          # Services (DocumentService, TTSService)
+│   ├── Models/            # Datenmodelle (Document, Task, MediaItem)
+│   ├── Persistence/       # Core Data (Document-, Task-, MediaItemEntity)
+│   └── Services/          # Services (DocumentService, TTSService, ImageStorageService, MediaService)
 ├── UI/                     # SwiftUI-Views und ViewModels
 │   ├── DocumentList/      # Dokumentenliste
-│   ├── Editor/            # Texteditor
+│   ├── Drawing/           # PencilKit-Zeichenfläche + Toolbar
+│   ├── Editor/            # Texteditor mit Medien-Integration
+│   ├── Media/             # PhotoPicker, Galerie, Detailansicht
 │   └── Settings/          # Einstellungen
 └── Resources/             # Assets, Lokalisierung
 ```
@@ -52,14 +55,25 @@ Schreiben20/
 - Titel direkt im Editor bearbeitbar
 - 18 neue Unit-Tests für Editor-Funktionen
 
-### 📅 Phase 4: Lautierende Tastatur & TTS
-- AVSpeechSynthesizer-Integration
-- Lautierung pro Buchstabe/Wort
-- Externe Tastatur-Unterstützung
+### ✅ Phase 4: Lautierende Tastatur & TTS (Abgeschlossen)
+- AVSpeechSynthesizer-Integration (de-DE)
+- 3 Vorlese-Modi: Buchstabe, Wort, Aus
+- Geschwindigkeits-Slider + Stimmenauswahl
+- TTS-Toolbar im Editor (Play/Stop, Toggle)
+- SettingsView mit TTS-Einstellungen
+- 11 neue Unit-Tests
 
-### 📅 Phase 5: Bilder & Zeichnen
-- PhotoPicker-Integration
-- Canvas zum Zeichnen
+### ✅ Phase 5: Bilder & Zeichnen (Abgeschlossen)
+- PhotoPicker-Integration (PHPickerViewController)
+- PencilKit-Zeichenfläche mit Toolbar (Stift, Marker, Radierer, 8 Farben)
+- ImageStorageService (JPEG 0.8, max 2048px, Thumbnails 200px)
+- MediaItem-Datenmodell (Photo + Drawing Typen)
+- MediaItemEntity (Core Data, geordnete Beziehung zu DocumentEntity)
+- MediaService (High-Level Coordinator)
+- Horizontale Medien-Galerie im Editor
+- Vollbild-Medienansicht (MediaDetailView)
+- Undo/Redo für Zeichnungen (30 Einträge)
+- ~34 neue Tests (MediaItem, ImageStorage, Drawing, Editor-Media)
 
 ### 📅 Phase 6: Export & Teilen
 - PDF/Bild-Export
@@ -107,6 +121,8 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 - **Architektur**: MVVM
 - **Persistenz**: Core Data
 - **TTS**: AVSpeechSynthesizer
+- **Zeichnen**: PencilKit
+- **Fotos**: PhotosUI (PHPickerViewController)
 - **Tests**: XCTest
 - **Zielplattform**: iPadOS 16.0+
 
@@ -117,11 +133,11 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 3. iPad-Simulator auswählen
 4. `cmd + R` zum Starten
 
-## 🎯 Aktuelle Features (Phase 3)
+## 🎯 Aktuelle Features (Phase 5)
 
 - ✅ App startet mit SwiftUI-Lifecycle
 - ✅ Navigation zwischen Dokumentliste, Editor und Einstellungen
-- ✅ Datenmodell für Dokumente mit ID, Titel, Datum, Text, Bildern und Aufgaben
+- ✅ Datenmodell für Dokumente mit ID, Titel, Datum, Text, Medien und Aufgaben
 - ✅ DocumentService mit CRUD-Operationen
 - ✅ Core Data Persistenz mit Migration
 - ✅ Swipe-to-Delete mit Bestätigungsdialog
@@ -131,8 +147,14 @@ xcodebuild test -scheme Schreiben20 -only-testing:Schreiben20UITests
 - ✅ Undo/Redo-Funktionalität
 - ✅ Wort- und Zeichenzähler
 - ✅ Auto-Save (30s Intervall + beim Verlassen)
+- ✅ Lautierende Tastatur (Buchstabe/Wort/Aus)
+- ✅ Text-to-Speech mit Geschwindigkeits- und Stimmenauswahl
+- ✅ Photo Picker zum Einfügen von Fotos
+- ✅ PencilKit-Zeichenfläche mit Werkzeug- und Farbauswahl
+- ✅ Medien-Galerie im Editor (horizontale Thumbnail-Leiste)
+- ✅ Vollbild-Medienansicht
 - ✅ Error-Handling und Loading-States
-- ✅ Unit-Tests für Modelle und ViewModels
+- ✅ Unit-Tests für Modelle, ViewModels und Services
 - ✅ UI-Tests für App-Launch und Navigation
 
 ## 📝 Commit-Richtlinien
@@ -170,4 +192,4 @@ Dieses Projekt ist ein Lern- und Demonstrationsprojekt.
 
 ---
 
-**Status**: Phase 3 abgeschlossen ✅ | Nächste Phase: Lautierende Tastatur & TTS
+**Status**: Phase 5 abgeschlossen ✅ | Nächste Phase: Export & Teilen

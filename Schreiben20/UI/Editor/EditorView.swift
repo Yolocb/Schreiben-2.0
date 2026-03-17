@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PencilKit
 
 /// Editor für ein einzelnes Dokument
 struct EditorView: View {
@@ -61,10 +62,32 @@ struct EditorView: View {
         .onAppear {
             viewModel.setDocumentService(coordinator.documentService)
             viewModel.setTTSService(coordinator.ttsService)
+            viewModel.setMediaService(coordinator.mediaService)
         }
         .onDisappear {
             viewModel.stopSpeaking()
             viewModel.saveOnDisappear()
+        }
+        // Photo Picker Sheet
+        .sheet(isPresented: $viewModel.showPhotoPicker) {
+            PhotoPickerView(
+                onImagePicked: { image in
+                    viewModel.addPhoto(image)
+                },
+                onDismiss: {
+                    viewModel.showPhotoPicker = false
+                }
+            )
+        }
+        // Drawing Canvas Sheet
+        .sheet(isPresented: $viewModel.showDrawingCanvas) {
+            DrawingSheet(viewModel: viewModel)
+        }
+        // Media Detail Sheet
+        .sheet(isPresented: $viewModel.showMediaDetail) {
+            if let item = viewModel.selectedMediaItem {
+                MediaDetailView(mediaItem: item, mediaService: coordinator.mediaService)
+            }
         }
     }
 
@@ -98,6 +121,20 @@ struct EditorView: View {
                     .background(Color.clear)
             }
             .background(Color(UIColor.systemBackground))
+
+            // Medien-Galerie (nur wenn Medien vorhanden)
+            if !viewModel.mediaItems.isEmpty {
+                MediaGalleryView(
+                    mediaItems: viewModel.mediaItems,
+                    mediaService: coordinator.mediaService,
+                    onTapItem: { item in
+                        viewModel.showDetail(for: item)
+                    },
+                    onDeleteItem: { item in
+                        viewModel.deleteMediaItem(item)
+                    }
+                )
+            }
         }
     }
 
@@ -172,8 +209,22 @@ struct EditorView: View {
             }
         }
 
-        // Rechte Seite: Undo/Redo und Speichern
+        // Rechte Seite: Medien, Undo/Redo und Speichern
         ToolbarItemGroup(placement: .navigationBarTrailing) {
+            // Foto hinzufügen
+            Button {
+                viewModel.showPhotoPicker = true
+            } label: {
+                Image(systemName: "photo.badge.plus")
+            }
+
+            // Zeichnung erstellen
+            Button {
+                viewModel.showDrawingCanvas = true
+            } label: {
+                Image(systemName: "pencil.tip.crop.circle")
+            }
+
             // Undo
             Button {
                 viewModel.undo()
@@ -309,6 +360,38 @@ private struct LineGuidesView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 8 + fontSize * 0.8) // Offset für erste Zeile
+        }
+    }
+}
+
+// MARK: - Drawing Sheet
+
+/// Sheet für die Zeichenfläche
+private struct DrawingSheet: View {
+    @ObservedObject var viewModel: EditorViewModel
+    @StateObject private var drawingVM = DrawingCanvasViewModel()
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            DrawingToolbar(
+                viewModel: drawingVM,
+                onSave: {
+                    viewModel.addDrawing(drawingVM.drawing)
+                    dismiss()
+                },
+                onDismiss: {
+                    dismiss()
+                }
+            )
+
+            DrawingCanvasView(
+                drawing: $drawingVM.drawing,
+                toolPickerIsActive: $drawingVM.showToolPicker,
+                onDrawingChanged: { newDrawing in
+                    drawingVM.drawingDidChange(newDrawing)
+                }
+            )
         }
     }
 }

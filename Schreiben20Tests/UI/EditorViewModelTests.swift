@@ -7,6 +7,7 @@
 
 import XCTest
 import Combine
+import PencilKit
 @testable import Schreiben20
 
 final class EditorViewModelTests: XCTestCase {
@@ -479,5 +480,62 @@ final class EditorViewModelTests: XCTestCase {
         // Assert
         wait(for: [expectation], timeout: 1.0)
         XCTAssertEqual(viewModel.textContent, "Test2")
+    }
+
+    // MARK: - Media Integration Tests
+
+    func testSetMediaService() {
+        // Arrange
+        let mediaService = MediaService(
+            imageStorageService: ImageStorageService(baseDirectory: FileManager.default.temporaryDirectory.appendingPathComponent("test_\(UUID().uuidString)")),
+            documentService: mockService
+        )
+
+        viewModel.setDocumentService(mockService)
+
+        // Act
+        viewModel.setMediaService(mediaService)
+
+        // Assert
+        XCTAssertNotNil(viewModel.mediaService)
+    }
+
+    func testMediaItemsInitiallyEmpty() {
+        // Arrange
+        let expectation = expectation(description: "Document loaded")
+        viewModel.setDocumentService(mockService)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            expectation.fulfill()
+        }
+
+        wait(for: [expectation], timeout: 1.0)
+
+        // Assert
+        XCTAssertTrue(viewModel.mediaItems.isEmpty, "Medien sollten initial leer sein")
+    }
+
+    func testShowPhotoPickerDefaultFalse() {
+        XCTAssertFalse(viewModel.showPhotoPicker, "Photo Picker sollte initial nicht sichtbar sein")
+    }
+
+    func testShowDrawingCanvasDefaultFalse() {
+        XCTAssertFalse(viewModel.showDrawingCanvas, "Drawing Canvas sollte initial nicht sichtbar sein")
+    }
+
+    func testShowMediaDetailDefaultFalse() {
+        XCTAssertFalse(viewModel.showMediaDetail, "Media Detail sollte initial nicht sichtbar sein")
+    }
+
+    func testShowDetailSetsSelectedMediaItem() {
+        // Arrange
+        let item = MediaItem(type: .photo, sortOrder: 0, caption: "Test")
+
+        // Act
+        viewModel.showDetail(for: item)
+
+        // Assert
+        XCTAssertEqual(viewModel.selectedMediaItem, item)
+        XCTAssertTrue(viewModel.showMediaDetail)
     }
 }

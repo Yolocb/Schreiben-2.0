@@ -16,8 +16,18 @@ class AppCoordinator: ObservableObject {
     // Service für Text-to-Speech / Lautierung
     let ttsService: TTSService
 
-    init(documentService: DocumentService = DocumentService(), ttsService: TTSService = TTSService()) {
+    // Service für Bildspeicherung im Dateisystem
+    let imageStorageService: ImageStorageService
+
+    // Service für Medienoperationen (High-Level Coordinator)
+    let mediaService: MediaService
+
+    init(documentService: DocumentService = DocumentService(),
+         ttsService: TTSService = TTSService(),
+         imageStorageService: ImageStorageService = ImageStorageService()) {
         self.documentService = documentService
         self.ttsService = ttsService
+        self.imageStorageService = imageStorageService
+        self.mediaService = MediaService(imageStorageService: imageStorageService, documentService: documentService)
     }
 }

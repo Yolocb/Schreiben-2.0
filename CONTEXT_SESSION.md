@@ -1,8 +1,8 @@
 # Session Context - Schreiben 2.0
 
-**Datum:** 2026-03-04
-**Status:** Phase 4 abgeschlossen ✅, Phase 5 geplant & Agent-Team bereit
-**Nächster Schritt:** Phase 5 - Bilder & Zeichnen (Agent-Team dispatchen)
+**Datum:** 2026-03-17
+**Status:** Phase 5 abgeschlossen ✅, Phase 6 geplant
+**Nächster Schritt:** Phase 6 - Export & Teilen
 
 ---
 
@@ -12,7 +12,6 @@
 
 **Repository:** https://github.com/Yolocb/Schreiben-2.0
 **Branch:** main
-**Letzter Commit:** `267824c` - [Phase 4] Lautierende Tastatur & Text-to-Speech
 
 ---
 
@@ -43,96 +42,36 @@
 - Geschwindigkeits-Slider + Stimmenauswahl
 - TTS-Toolbar im Editor (Play/Stop, Toggle)
 - SettingsView mit TTS-Einstellungen
-- 18 neue Tests (TTSServiceTests + EditorViewModel TTS-Tests)
+
+### Phase 5: Bilder & Zeichnen ✅ NEU
+- **Datenmodell:** MediaItem struct + MediaType enum (photo/drawing)
+- **Core Data:** MediaItemEntity mit geordneter Beziehung zu DocumentEntity
+- **ImageStorageService:** Dateibasierte Speicherung (JPEG 0.8, max 2048px, Thumbnails 200px, PencilKit .drawing)
+- **MediaService:** High-Level Coordinator (verbindet Storage + Core Data)
+- **PencilKit:** DrawingCanvasView (UIViewRepresentable), DrawingCanvasViewModel (Undo/Redo 30 Einträge)
+- **DrawingToolbar:** Stift/Marker/Radierer, 8 Farben, Strichstärke-Slider
+- **PhotoPickerView:** PHPickerViewController-Wrapper
+- **MediaGalleryView:** Horizontale Thumbnail-Leiste (120pt, nur wenn Medien vorhanden)
+- **MediaDetailView:** Vollbild-Ansicht
+- **AppCoordinator** erweitert: imageStorageService + mediaService
+- **EditorView/ViewModel** erweitert: Gallery, Photo/Drawing Buttons, Sheets
 
 ---
 
 ## Test-Status
 
-**Gesamt: 71 Tests ✅**
+**Gesamt: ~105 Tests**
 
 | Test-Datei | Anzahl |
 |------------|--------|
-| DocumentTests.swift | 10 |
+| DocumentTests.swift | 12 |
+| MediaItemTests.swift | 8 |
+| ImageStorageServiceTests.swift | 10 |
 | DocumentListViewModelTests.swift | 20 |
-| EditorViewModelTests.swift | 25 |
+| EditorViewModelTests.swift | 31 |
+| DrawingCanvasViewModelTests.swift | 8 |
 | TTSServiceTests.swift | 11 |
 | AppLaunchTests.swift (UI) | 5 |
-
----
-
-## Phase 5: Bilder & Zeichnen — BEREIT ZUM START
-
-### Quick-Start für nächste Session
-
-Starte mit:
-```
-"Los geht's" (um das Phase 5 Agent-Team zu dispatchen)
-```
-
-### Agent-Team Struktur
-
-```
-        TEAM LEAD (#7)
-       /      |      \
-  Stream A  Stream B  Stream C    (parallel in Worktrees)
-       \      |      /
-        Stream D                  (Integration, sequentiell)
-            |
-        Stream E                  (QA, sequentiell)
-```
-
-### Stream A: Data Architect — Core Data & Models
-- MediaItem.swift (Struct + MediaType Enum)
-- MediaItemEntity+CoreDataClass/Properties.swift
-- Document.swift erweitern (mediaItems: [MediaItem])
-- DocumentEntity erweitern (mediaItems Relationship)
-- MediaItemTests.swift (8 Tests)
-
-### Stream B: Storage Engineer — ImageStorageService
-- ImageStorageService.swift (File I/O: JPEG, Thumbnails, Drawing Data)
-- ImageStorageServiceTests.swift (10 Tests)
-- Speicherung: Documents/images/{uuid}.jpg, {uuid}.drawing, {uuid}_thumb.jpg
-
-### Stream C: Drawing Specialist — PencilKit Canvas
-- DrawingCanvasView.swift (UIViewRepresentable + PKCanvasView)
-- DrawingCanvasViewModel.swift
-- DrawingToolbar.swift (Pen, Marker, Eraser, Farbe, Undo/Redo)
-- DrawingCanvasViewModelTests.swift (8 Tests)
-
-### Stream D: Integration Lead — Alles verdrahten
-- MediaService.swift (High-Level Coordinator)
-- PhotoPickerView.swift (PHPickerViewController)
-- MediaGalleryView.swift (Horizontale Thumbnail-Leiste)
-- MediaItemThumbnailView.swift + MediaDetailView.swift
-- AppCoordinator erweitern (imageStorageService, mediaService)
-- EditorView/ViewModel erweitern (Gallery, Toolbar-Buttons, Sheets)
-- Info.plist (NSPhotoLibraryUsageDescription)
-
-### Stream E: QA Engineer — Tests & Docs
-- EditorViewModelTests erweitern (+6 Media-Tests)
-- DocumentTests erweitern (+2 Tests)
-- Session Context + README aktualisieren
-- Ziel: ~34 neue Tests → Gesamt ~105
-
-### Architektur-Entscheidungen Phase 5
-
-**Image Storage: Hybrid-Ansatz**
-- Datei-System für Bilddaten (JPEG 0.8, max 2048x2048, Thumbnails 200x200)
-- Core Data für Metadaten (MediaItemEntity mit Relationship zu DocumentEntity)
-- PencilKit Drawings als Data-Blob im Dateisystem (.drawing Extension)
-
-**Core Data Model Update:**
-- Neue Entity: MediaItemEntity (id, type, createdAt, sortOrder, caption)
-- Neue Relationship: DocumentEntity.mediaItems → to-many, ordered, cascade
-- Bestehende imageIDs bleiben für Backward-Compatibility
-
-**Editor Layout Änderung:**
-```
-[StatisticsBar]
-[TextEditor (flexibel)]
-[MediaGalleryView (120pt, nur wenn Medien vorhanden)]
-```
 
 ---
 
@@ -141,27 +80,39 @@ Starte mit:
 ```
 Schreiben20/
 ├── App/
-│   ├── AppCoordinator.swift      (documentService, ttsService)
+│   ├── AppCoordinator.swift      (documentService, ttsService, imageStorageService, mediaService)
 │   └── Schreiben20App.swift
 ├── Core/
 │   ├── Models/
-│   │   └── Document.swift
+│   │   └── Document.swift        (Document, Task, MediaItem, MediaType)
 │   ├── Persistence/
 │   │   ├── PersistenceController.swift
 │   │   ├── DocumentEntity+CoreDataClass.swift
 │   │   ├── DocumentEntity+CoreDataProperties.swift
 │   │   ├── TaskEntity+CoreDataClass.swift
-│   │   └── TaskEntity+CoreDataProperties.swift
+│   │   ├── TaskEntity+CoreDataProperties.swift
+│   │   ├── MediaItemEntity+CoreDataClass.swift
+│   │   └── MediaItemEntity+CoreDataProperties.swift
 │   └── Services/
 │       ├── DocumentService.swift
-│       └── TTSService.swift
+│       ├── TTSService.swift
+│       ├── ImageStorageService.swift
+│       └── MediaService.swift
 └── UI/
     ├── DocumentList/
     │   ├── DocumentListView.swift
     │   └── DocumentListViewModel.swift
+    ├── Drawing/
+    │   ├── DrawingCanvasView.swift
+    │   ├── DrawingCanvasViewModel.swift
+    │   └── DrawingToolbar.swift
     ├── Editor/
     │   ├── EditorView.swift
     │   └── EditorViewModel.swift
+    ├── Media/
+    │   ├── PhotoPickerView.swift
+    │   ├── MediaGalleryView.swift
+    │   └── MediaDetailView.swift
     └── Settings/
         └── SettingsView.swift
 ```
@@ -178,6 +129,7 @@ let viewModel = EditorViewModel(documentID: id)
 // Services werden im onAppear gesetzt
 viewModel.setDocumentService(coordinator.documentService)
 viewModel.setTTSService(coordinator.ttsService)
+viewModel.setMediaService(coordinator.mediaService)
 ```
 
 ### UserDefaults Keys
@@ -189,26 +141,28 @@ viewModel.setTTSService(coordinator.ttsService)
 - schreiben20.ttsReadingMode (String)
 - schreiben20.ttsVoiceID (String?)
 
-### Xcode-Projekt
+### Xcode-Projekt Hinweise
 - Das .xcodeproj muss auf einem Mac erstellt werden
 - Alle Swift-Dateien sind vorhanden und getestet (Code-Review)
 - Core Data Model (.xcdatamodeld) muss in Xcode geöffnet werden
+- **NEU Phase 5:** MediaItemEntity muss im Core Data Model Editor hinzugefügt werden:
+  - Entity: MediaItemEntity (id: UUID, type: String, createdAt: Date, sortOrder: Integer 16, caption: String)
+  - Relationship: document → DocumentEntity (inverse: mediaItems)
+  - DocumentEntity erweitert: mediaItems → to-many, ordered, cascade delete
+
+### Info.plist Ergänzungen (Phase 5)
+- `NSPhotoLibraryUsageDescription`: "Schreiben 2.0 möchte auf deine Fotos zugreifen, um Bilder in Dokumente einzufügen."
 
 ---
 
-## Git-Historie
+## Nächste Phase: Phase 6 - Export & Teilen
 
-```
-267824c [Phase 4] Lautierende Tastatur & Text-to-Speech
-d0d29e9 Docs: Session Context für Phase 4 vorbereitet
-f2a4200 [Phase 3] Texteditor & Schreiboberfläche
-2e09899 [Phase 2] Dokumentenverwaltung: Löschen und Umbenennen
-be52405 Docs: Session Context für nächste Arbeitseinheit
-6e60f6b Merge: Resolve README.md conflict
-3526fab [Phase 1] Initial Commit: Projekt-Setup mit Bugfixes
-a5afc95 Initial commit
-```
+Geplante Features:
+- PDF-Export (Dokument als PDF mit eingebetteten Bildern)
+- Bild-Export (Screenshot des Dokuments)
+- iOS Share-Sheet Integration
+- Drucken-Unterstützung
 
 ---
 
-**Status:** Phase 5 Agent-Team bereit — sage "Los geht's" zum Starten
+**Status:** Phase 5 abgeschlossen ✅ — bereit für Phase 6
